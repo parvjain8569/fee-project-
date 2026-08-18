@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Glass Kanban</title>
+    
+    <style>
+        /* --- Global Resets & Fonts --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* --- Animated Dark Gradient Background --- */
+        body {
+            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #111827, #064e3b);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #e2e8f0;
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Custom Scrollbar --- */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05); 
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2); 
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3); 
+        }
+
+        /* --- Glassmorphic Header --- */
+        .board-header {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .board-header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.8);
+            border-color: rgba(239, 68, 68, 1);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+        /* --- Main Board Canvas --- */
+        .board-canvas {
+            display: flex;
+            flex: 1;
+            overflow-x: auto;
+            padding: 30px;
+            align-items: flex-start;
+            gap: 25px;
+        }
+
+        /* --- Glassmorphic Columns --- */
+        .column {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            width: 320px;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .column-header {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .column-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+
+        .card-count {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #94a3b8;
+        }
+
+        /* --- Column Body --- */
+        .column-body {
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* --- Floating Interactive Cards --- */
+        .card {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: grab;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* The glowing hover effect */
+        .card:hover {
+            transform: translateY(-4px) scale(1.02);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 
+                        0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        .card:active {
+            cursor: grabbing;
+            transform: translateY(0) scale(0.98);
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            color: #f1f5f9;
+            font-weight: 500;
+        }
+
+        /* --- Glowing Neon Labels --- */
+        .card-labels {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .label {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .label-red { 
+            color: #fda4af; 
+            background: rgba(225, 29, 72, 0.2); 
+            border: 1px solid rgba(225, 29, 72, 0.5);
+        }
+        .label-blue { 
+            color: #7dd3fc; 
+            background: rgba(2, 132, 199, 0.2); 
+            border: 1px solid rgba(2, 132, 199, 0.5);
+        }
+        .label-green { 
+            color: #86efac; 
+            background: rgba(22, 163, 74, 0.2); 
+            border: 1px solid rgba(22, 163, 74, 0.5);
+        }
+        .label-purple { 
+            color: #d8b4fe; 
+            background: rgba(147, 51, 234, 0.2); 
+            border: 1px solid rgba(147, 51, 234, 0.5);
+        }
+
+        /* --- Card Footer & Icons --- */
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 12px;
+            margin-top: 8px;
+        }
+
+        .avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        /* --- Add Card Button --- */
+        .column-footer {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .add-card-btn {
+            width: 100%;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            color: #94a3b8;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .add-card-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="board-header">
+        <h1>Kanban Workspace</h1>
+        <div class="user-controls">
+            <span>parv@workspace.dev</span>
+            <button class="logout-btn">Log Out</button>
+        </div>
+    </header>
+
+    <main class="board-canvas">
+
+        <!-- COLUMN 1: Backlog -->
+        <div class="column">
+            <div class="column-header">
+                <h2>Backlog</h2>
+                <span class="card-count">2</span>
+            </div>
+            
+            <div class="column-body">
+                <div class="card" draggable="true">
+                    <div class="card-labels">
+                        <span class="label label-blue">Coding</span>
+                        <span class="label label-red">Hard</span>
+                    </div>
+                    <p class="card-title">Complete daily Data Structures and Algorithms exercises in C</p>
+                    <div class="card-footer">
+                        <span style="font-size: 0.8rem; color: #94a3b8;">Dec 15</span>
+                        <div class="avatar">P</div>
+                    </div>
+                </div>
+
+                <div class="card" draggable="true">
+                    <div class="card-labels">
+                        <span class="label label-green">Media</span>
+                    </div>
+                    <p class="card-title">Catch up on the latest chapters of Berserk and Chainsaw Man</p>
+                    <div class="card-footer">
+                        <span style="font-size: 0.8rem; color: #94a3b8;">Ongoing</span>
+                        <div class="avatar">P</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column-footer">
+                <button class="add-card-btn">+ Add new task</button>
+            </div>
+        </div>
+
+        <!-- COLUMN 2: In Progress -->
+        <div class="column">
+            <div class="column-header">
+                <h2>In Progress</h2>
+                <span class="card-count">1</span>
+            </div>
+            
+            <div class="column-body">
+                <div class="card" draggable="true">
+                    <div class="card-labels">
+                        <span class="label label-purple">Gaming</span>
+                    </div>
+                    <p class="card-title">Defeat final boss in Sekiro: Shadows Die Twice</p>
+                    <div class="card-footer">
+                        <span style="font-size: 0.8rem; color: #94a3b8;">In-game</span>
+                        <div class="avatar">P</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column-footer">
+                <button class="add-card-btn">+ Add new task</button>
+            </div>
+        </div>
+
+        <!-- COLUMN 3: Done -->
+        <div class="column">
+            <div class="column-header">
+                <h2>Done</h2>
+                <span class="card-count">2</span>
+            </div>
+            
+            <div class="column-body">
+                <div class="card" draggable="true">
+                    <div class="card-labels">
+                        <span class="label label-blue">Coding</span>
+                    </div>
+                    <p class="card-title">Debug JavaScript logic for the UI hover states</p>
+                </div>
+
+                <div class="card" draggable="true">
+                    <div class="card-labels">
+                        <span class="label label-green">Media</span>
+                    </div>
+                    <p class="card-title">Watch the newest season of Jujutsu Kaisen</p>
+                </div>
+            </div>
+
+            <div class="column-footer">
+                <button class="add-card-btn">+ Add new task</button>
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>
