@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import Website from './Website'; // Importing our main website component
+import Website from './Website';
 import './App.css';
 
 // ==========================================
-// 1. REGISTRATION COMPONENT
+// REGISTRATION COMPONENT
 // ==========================================
 const Register = ({ onRegister, navigateToLogin }) => {
   const [formData, setFormData] = useState({ name: '', surname: '', email: '', password: '', confirm: '' });
@@ -55,7 +55,7 @@ const Register = ({ onRegister, navigateToLogin }) => {
 };
 
 // ==========================================
-// 2. LOGIN COMPONENT
+// LOGIN COMPONENT
 // ==========================================
 const Login = ({ registeredUser, onLogin, navigateToRegister }) => {
   const [email, setEmail] = useState('');
@@ -102,10 +102,10 @@ const Login = ({ registeredUser, onLogin, navigateToRegister }) => {
 };
 
 // ==========================================
-// 3. MAIN APP ROUTER
+// MAIN APP ROUTER
 // ==========================================
 export default function App() {
-  const [view, setView] = useState('register'); // 'register', 'login', or 'workspace'
+  const [view, setView] = useState('register'); 
   const [registeredUser, setRegisteredUser] = useState(null);
 
   if (view === 'register') {
@@ -116,6 +116,5 @@ export default function App() {
     return <Login registeredUser={registeredUser} onLogin={() => setView('workspace')} navigateToRegister={() => setView('register')} />;
   }
 
-  // Once logged in, render the main website from our new file
   return <Website registeredUser={registeredUser} onLogout={() => setView('login')} />;
 }
