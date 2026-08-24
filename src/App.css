@@ -24,144 +24,6 @@ body {
 }
 
 /* =========================================
-   AUTH PAGES
-========================================== */
-.auth-page {
-  min-height: 100vh;
-  background-color: #ffffff;
-  display: flex;
-  width: 100vw;
-}
-
-.centered-bg {
-  justify-content: center;
-  align-items: center;
-}
-
-.right-aligned-bg {
-  justify-content: flex-end; 
-  align-items: center;
-}
-
-.login-wrapper-right {
-  width: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding-right: 5%;
-}
-
-.auth-box {
-  background: #ffffff;
-  width: 100%;
-  max-width: 400px;
-  padding: 40px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-}
-
-.auth-box h2 {
-  color: #0f172a;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 5px;
-}
-
-.auth-box p {
-  color: #64748b;
-  font-size: 0.9rem;
-  margin-bottom: 25px;
-}
-
-.error-message {
-  background: #fef2f2;
-  color: #ef4444;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 15px;
-  font-size: 0.85rem;
-  border: 1px solid #fca5a5;
-}
-
-.stack-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.input-group label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #334155;
-}
-
-.input-group input {
-  padding: 10px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #f8fafc;
-  color: #0f172a;
-  font-size: 0.9rem;
-  outline: none;
-}
-
-.input-group input:focus {
-  border-color: #4f46e5;
-  background: #ffffff;
-}
-
-.btn-primary {
-  width: 100%;
-  padding: 12px;
-  background: #4f46e5;
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.btn-primary:hover {
-  background: #4338ca;
-}
-
-.auth-footer {
-  text-align: center;
-  margin-top: 20px;
-  font-size: 0.85rem;
-  color: #64748b;
-}
-
-.auth-footer span {
-  color: #4f46e5;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.logo-box {
-  width: 40px;
-  height: 40px;
-  background: #4f46e5;
-  color: white;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 15px;
-}
-
-/* =========================================
    WORKSPACE & SIDEBAR
 ========================================== */
 .app-container {
@@ -183,12 +45,37 @@ body {
   text-align: left;
 }
 
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+}
+
 .sidebar-header-title {
   font-size: 0.75rem;
-  padding: 15px 20px;
   letter-spacing: 1px;
   color: #a1a1aa;
   font-weight: 600;
+  margin: 0;
+}
+
+.sidebar-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.action-icon {
+  width: 16px;
+  height: 16px;
+  color: #a1a1aa;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.action-icon:hover {
+  color: #ffffff;
 }
 
 .sidebar-scroll {
@@ -196,11 +83,15 @@ body {
   overflow-y: auto;
 }
 
+.folder-container {
+  position: relative;
+}
+
 .folder-header {
   padding: 8px 20px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 700;
@@ -228,8 +119,8 @@ body {
   font-size: 0.85rem;
   cursor: pointer;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
   color: #a1a1aa;
 }
 
@@ -248,6 +139,38 @@ body {
   font-family: 'Fira Code', monospace;
   color: #eab308;
   font-size: 0.8rem;
+}
+
+.delete-icon {
+  width: 14px;
+  height: 14px;
+  color: #71717a;
+  display: none; 
+}
+
+.folder-header:hover .delete-icon,
+.file-item:hover .delete-icon {
+  display: block; 
+}
+
+.delete-icon:hover {
+  color: #ef4444; 
+}
+
+.inline-input {
+  background: #27272a;
+  border: 1px solid #3b82f6;
+  color: #ffffff;
+  outline: none;
+  padding: 2px 6px;
+  font-size: 0.85rem;
+  border-radius: 3px;
+  width: 130px;
+}
+
+.inline-input.folder-inline-input {
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 /* =========================================
@@ -329,6 +252,44 @@ body {
   justify-content: flex-start;
 }
 
+/* =========================================
+   DASHED ADD LIST BUTTON
+========================================== */
+.add-list-zone {
+  width: 280px;
+  min-width: 280px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.dashed-box {
+  border: 2px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  background: transparent;
+}
+
+.add-list-zone:hover .dashed-box {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.plus-icon {
+  font-size: 1.2rem;
+  margin-right: 8px;
+}
+
+/* =========================================
+   COLUMNS
+========================================== */
 .column {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -355,6 +316,28 @@ body {
   font-size: 0.95rem;
   font-weight: 600;
   color: #0f172a;
+}
+
+.column-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.col-icon {
+  width: 14px;
+  height: 14px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.col-icon:hover {
+  color: #3b82f6;
+}
+
+.col-icon-delete:hover {
+  color: #ef4444;
 }
 
 .column-count {
@@ -400,9 +383,6 @@ body {
   line-height: 1.4;
 }
 
-/* =========================================
-   CARD FOOTER (Comments & Logos)
-========================================== */
 .card-footer {
   display: flex;
   justify-content: space-between;
@@ -455,9 +435,6 @@ body {
   color: #0f172a;
 }
 
-/* =========================================
-   DRAG OVERLAY FIX
-========================================== */
 .drag-overlay-card {
   rotate: 3deg; 
   scale: 1.05;
@@ -468,7 +445,7 @@ body {
 }
 
 /* =========================================
-   CUSTOM MODALS (Add Card & Detail Modals)
+   CUSTOM MODALS
 ========================================== */
 .modal-overlay {
   position: fixed;

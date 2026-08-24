@@ -3,7 +3,10 @@ import { DndContext, closestCenter, useDroppable, DragOverlay } from '@dnd-kit/c
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { v4 as uuidv4 } from 'uuid';
-import './App.css';
+import './App.css'; 
+
+const BOARDS_DB_KEY = 'aether-boards-v4';
+const SIDEBAR_DB_KEY = 'aether-sidebar-v4';
 
 // ==========================================
 // DRAGGABLE CARD COMPONENT
@@ -18,7 +21,7 @@ const SortableCard = ({ task, user, onOpenDetail, colId }) => {
   };
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
-  const commentCount = task.comments ? task.comments.length : 0;
+  const commentCount = Array.isArray(task.comments) ? task.comments.length : 0;
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="card">
@@ -45,18 +48,28 @@ const SortableCard = ({ task, user, onOpenDetail, colId }) => {
 // ==========================================
 // DROPPABLE COLUMN COMPONENT
 // ==========================================
-const BoardColumn = ({ column, tasks, onOpenAddModal, onOpenDetail, user }) => {
+const BoardColumn = ({ column, tasks, onOpenAddModal, onOpenDetail, onEditList, onDeleteList, user }) => {
   const { setNodeRef } = useDroppable({ id: column.id });
 
   return (
     <div ref={setNodeRef} className="column" id={column.id}>
       <div className="column-header">
         <h3 className="column-title">{column.title}</h3>
-        <span className="column-count">{tasks.length}</span>
+        <div className="column-actions">
+          <svg onClick={() => onEditList(column.id, column.title)} className="col-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          <svg onClick={() => onDeleteList(column.id)} className="col-icon col-icon-delete" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          <span className="column-count">{tasks.length}</span>
+        </div>
       </div>
       
       <div className="card-dropzone">
-        <SortableContext items={column.taskIds} strategy={verticalListSortingStrategy}>
+        <SortableContext items={column.taskIds || []} strategy={verticalListSortingStrategy}>
           {tasks.map(task => (
             <SortableCard 
               key={task.id} 
@@ -77,84 +90,186 @@ const BoardColumn = ({ column, tasks, onOpenAddModal, onOpenDetail, user }) => {
 };
 
 // ==========================================
-// DEFAULT DATA
-// ==========================================
-const defaultBoards = {
-  'file-1': {
-    columns: {
-      backlog: { id: 'backlog', title: 'Backlog', taskIds: ['t1'] },
-      todo: { id: 'todo', title: 'To Do', taskIds: [] },
-      doing: { id: 'doing', title: 'Doing', taskIds: [] },
-      done: { id: 'done', title: 'Done', taskIds: [] },
-    },
-    tasks: { 't1': { id: 't1', content: 'Setup Aether UI CSS', description: '', comments: [] } }
-  },
-  'file-2': {
-    columns: {
-      backlog: { id: 'backlog', title: 'Backlog', taskIds: [] },
-      todo: { id: 'todo', title: 'To Do', taskIds: ['t2'] },
-      doing: { id: 'doing', title: 'Doing', taskIds: [] },
-      done: { id: 'done', title: 'Done', taskIds: [] },
-    },
-    tasks: { 't2': { id: 't2', content: 'Review C matrices logic', description: '', comments: [] } }
-  },
-  'file-3': {
-    columns: {
-      backlog: { id: 'backlog', title: 'Backlog', taskIds: [] },
-      todo: { id: 'todo', title: 'To Do', taskIds: [] },
-      doing: { id: 'doing', title: 'Doing', taskIds: ['t3'] },
-      done: { id: 'done', title: 'Done', taskIds: [] },
-    },
-    tasks: { 't3': { id: 't3', content: 'Defeat Genichiro Ashina', description: '', comments: [] } }
-  }
-};
-
-// ==========================================
 // MAIN WEBSITE EXPORT
 // ==========================================
 export default function Website({ registeredUser, onLogout }) {
   const [activeId, setActiveId] = useState(null); 
-  const [expandedFolders, setExpandedFolders] = useState({ 'folder-1': true, 'folder-2': true });
-  const [activeFileId, setActiveFileId] = useState('file-1');
+  const [expandedFolders, setExpandedFolders] = useState({ 'folder-1': true });
   
-  // MODAL STATES
+  const [activeFileId, setActiveFileId] = useState('file-1');
+  const [activeFolderId, setActiveFolderId] = useState('folder-1'); 
+  
+  const [inlineAction, setInlineAction] = useState(null); 
+  const [inlineValue, setInlineValue] = useState('');
+
+  // Modals for Cards
   const [addModalCol, setAddModalCol] = useState(null);
   const [newCardText, setNewCardText] = useState('');
-  
   const [detailModalTask, setDetailModalTask] = useState(null);
   const [newCommentText, setNewCommentText] = useState('');
   const [descriptionText, setDescriptionText] = useState('');
 
-  // LOCAL STORAGE INITIALIZATION
+  // Modals for Lists (Columns)
+  const [listModal, setListModal] = useState({ isOpen: false, mode: 'add', colId: null, title: '' });
+  const [deleteListModal, setDeleteListModal] = useState({ isOpen: false, colId: null });
+
+  // Load Data safely
   const [boards, setBoards] = useState(() => {
-    const saved = localStorage.getItem('aether-boards-data');
-    if (saved) return JSON.parse(saved);
-    return defaultBoards;
+    try {
+      const saved = localStorage.getItem(BOARDS_DB_KEY);
+      return saved ? JSON.parse(saved) : { 'file-1': { columnOrder: [], columns: {}, tasks: {} } };
+    } catch {
+      return { 'file-1': { columnOrder: [], columns: {}, tasks: {} } };
+    }
   });
 
-  // SAVES TO LOCAL STORAGE EVERY TIME 'BOARDS' CHANGES
+  const [sidebarStructure, setSidebarStructure] = useState(() => {
+    try {
+      const saved = localStorage.getItem(SIDEBAR_DB_KEY);
+      return saved ? JSON.parse(saved) : [{ id: 'folder-1', title: 'PROJECTS', files: [{ id: 'file-1', name: 'New Board.json' }] }];
+    } catch {
+      return [{ id: 'folder-1', title: 'PROJECTS', files: [{ id: 'file-1', name: 'New Board.json' }] }];
+    }
+  });
+
   useEffect(() => {
-    localStorage.setItem('aether-boards-data', JSON.stringify(boards));
+    localStorage.setItem(BOARDS_DB_KEY, JSON.stringify(boards));
   }, [boards]);
 
-  const [sidebarStructure] = useState([
-    {
-      id: 'folder-1', title: 'SEMESTER 3', files: [
-        { id: 'file-1', name: 'Web Dev.json' },
-        { id: 'file-2', name: 'Data Structures.json' }
-      ]
-    },
-    {
-      id: 'folder-2', title: 'GAMING', files: [
-        { id: 'file-3', name: 'Sekiro_Bosses.json' }
-      ]
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_DB_KEY, JSON.stringify(sidebarStructure));
+  }, [sidebarStructure]);
+
+  // --- SIDEBAR ACTIONS ---
+  const toggleFolder = (folderId) => {
+    setExpandedFolders(prev => ({ ...prev, [folderId]: !prev[folderId] }));
+    setActiveFolderId(folderId); 
+  };
+
+  const handleDeleteFolder = (e, folderId) => {
+    e.stopPropagation(); 
+    setSidebarStructure(prev => prev.filter(f => f.id !== folderId));
+  };
+
+  const handleDeleteFile = (e, folderId, fileId) => {
+    e.stopPropagation();
+    setSidebarStructure(prev => prev.map(folder => {
+      if (folder.id === folderId) {
+        return { ...folder, files: folder.files.filter(file => file.id !== fileId) };
+      }
+      return folder;
+    }));
+    if (activeFileId === fileId) setActiveFileId(null); 
+  };
+
+  const startAddFolder = () => {
+    setInlineAction({ type: 'folder', targetFolderId: null });
+    setInlineValue('');
+  };
+
+  const startAddFile = () => {
+    if (sidebarStructure.length === 0) return;
+    const targetFolderId = activeFolderId || sidebarStructure[0].id;
+    setExpandedFolders(prev => ({ ...prev, [targetFolderId]: true }));
+    setInlineAction({ type: 'file', targetFolderId });
+    setInlineValue('');
+  };
+
+  const handleInlineSubmit = () => {
+    if (!inlineValue.trim()) {
+      setInlineAction(null);
+      return;
     }
-  ]);
 
-  const toggleFolder = (folderId) => setExpandedFolders(prev => ({ ...prev, [folderId]: !prev[folderId] }));
+    if (inlineAction.type === 'folder') {
+      const newId = `folder-${uuidv4()}`;
+      const newFolder = { id: newId, title: inlineValue.trim().toUpperCase(), files: [] };
+      setSidebarStructure(prev => [...prev, newFolder]);
+      setExpandedFolders(prev => ({ ...prev, [newId]: true }));
+      setActiveFolderId(newId);
 
-  // --- DRAG LOGIC ---
+    } else if (inlineAction.type === 'file') {
+      const fileName = inlineValue.trim();
+      const nameWithExt = fileName.endsWith('.json') ? fileName : `${fileName}.json`;
+      const newFileId = `file-${uuidv4()}`;
+
+      setSidebarStructure(prev => prev.map(folder => {
+        if (folder.id === inlineAction.targetFolderId) {
+          return { ...folder, files: [...folder.files, { id: newFileId, name: nameWithExt }] };
+        }
+        return folder;
+      }));
+
+      // Initialize an empty board properly
+      setBoards(prev => ({
+        ...prev,
+        [newFileId]: { columnOrder: [], columns: {}, tasks: {} }
+      }));
+      setActiveFileId(newFileId);
+    }
+    
+    setInlineAction(null);
+    setInlineValue('');
+  };
+
+  // --- LIST (COLUMN) LOGIC (Fixed Deep Cloning) ---
+  const handleSaveList = () => {
+    if (!listModal.title.trim() || !activeFileId) return;
+
+    setBoards(prev => {
+      const currentBoard = prev[activeFileId] || {};
+      
+      // PROPER DEEP CLONE to prevent the mutation bug
+      const newBoard = JSON.parse(JSON.stringify(currentBoard));
+
+      if (!Array.isArray(newBoard.columnOrder)) newBoard.columnOrder = [];
+      if (!newBoard.columns) newBoard.columns = {};
+      if (!newBoard.tasks) newBoard.tasks = {};
+
+      if (listModal.mode === 'add') {
+        const newColId = `col-${uuidv4()}`;
+        newBoard.columns[newColId] = { id: newColId, title: listModal.title, taskIds: [] };
+        newBoard.columnOrder.push(newColId); 
+      } else if (listModal.mode === 'edit') {
+        if (newBoard.columns[listModal.colId]) {
+          newBoard.columns[listModal.colId].title = listModal.title;
+        }
+      }
+      
+      return { ...prev, [activeFileId]: newBoard };
+    });
+    
+    setListModal({ isOpen: false, mode: 'add', colId: null, title: '' });
+  };
+
+  const confirmDeleteList = () => {
+    setBoards(prev => {
+      const currentBoard = prev[activeFileId] || {};
+      // PROPER DEEP CLONE
+      const newBoard = JSON.parse(JSON.stringify(currentBoard));
+      
+      if (!newBoard.columns || !Array.isArray(newBoard.columnOrder)) return prev;
+
+      const colId = deleteListModal.colId;
+      
+      if (newBoard.columns[colId] && Array.isArray(newBoard.columns[colId].taskIds)) {
+        const tasksToRemove = newBoard.columns[colId].taskIds;
+        tasksToRemove.forEach(taskId => {
+          if (newBoard.tasks && newBoard.tasks[taskId]) delete newBoard.tasks[taskId];
+        });
+      }
+
+      delete newBoard.columns[colId];
+      newBoard.columnOrder = newBoard.columnOrder.filter(id => id !== colId);
+      
+      return { ...prev, [activeFileId]: newBoard };
+    });
+    setDeleteListModal({ isOpen: false, colId: null });
+  };
+
+  // --- CARD & DRAG LOGIC ---
   const handleDragStart = (event) => setActiveId(event.active.id);
+  
   const handleDragEnd = (event) => {
     setActiveId(null);
     const { active, over } = event;
@@ -162,20 +277,24 @@ export default function Website({ registeredUser, onLogout }) {
 
     const sourceId = active.id;
     const destId = over.id;
-    const activeBoard = boards[activeFileId];
     
-    let sourceColId = null;
-    let destColId = null;
-
-    Object.keys(activeBoard.columns).forEach(colId => {
-      if (activeBoard.columns[colId].taskIds.includes(sourceId)) sourceColId = colId;
-      if (colId === destId || activeBoard.columns[colId].taskIds.includes(destId)) destColId = colId;
-    });
-
-    if (!sourceColId || !destColId) return;
-
     setBoards(prev => {
-      const newBoard = JSON.parse(JSON.stringify(prev[activeFileId])); 
+      const currentBoard = prev[activeFileId] || {};
+      const newBoard = JSON.parse(JSON.stringify(currentBoard));
+
+      let sourceColId = null;
+      let destColId = null;
+
+      Object.keys(newBoard.columns || {}).forEach(colId => {
+        const col = newBoard.columns[colId];
+        if (col && Array.isArray(col.taskIds)) {
+          if (col.taskIds.includes(sourceId)) sourceColId = colId;
+          if (colId === destId || col.taskIds.includes(destId)) destColId = colId;
+        }
+      });
+
+      if (!sourceColId || !destColId) return prev;
+
       const sourceTaskIds = newBoard.columns[sourceColId].taskIds;
       const destTaskIds = newBoard.columns[destColId].taskIds;
       const sourceIndex = sourceTaskIds.indexOf(sourceId);
@@ -187,38 +306,50 @@ export default function Website({ registeredUser, onLogout }) {
       } else {
         destTaskIds.push(sourceId);
       }
+      
       return { ...prev, [activeFileId]: newBoard };
     });
   };
+  
   const handleDragCancel = () => setActiveId(null);
 
-  // --- ADD CARD MODAL LOGIC ---
   const handleConfirmAddCard = () => {
-    if (!newCardText.trim()) return;
+    if (!newCardText.trim() || !activeFileId) return;
+    
     const newId = `t-${uuidv4()}`;
+    
     setBoards(prev => {
-      const newBoard = JSON.parse(JSON.stringify(prev[activeFileId]));
-      newBoard.tasks[newId] = { id: newId, content: newCardText, description: '', comments: [] };
-      newBoard.columns[addModalCol].taskIds.push(newId);
+      const currentBoard = prev[activeFileId] || {};
+      const newBoard = JSON.parse(JSON.stringify(currentBoard));
+      
+      if (!newBoard.tasks) newBoard.tasks = {};
+      if (!newBoard.columns) newBoard.columns = {};
+
+      if (newBoard.columns[addModalCol]) {
+        if (!Array.isArray(newBoard.columns[addModalCol].taskIds)) {
+          newBoard.columns[addModalCol].taskIds = [];
+        }
+        newBoard.tasks[newId] = { id: newId, content: newCardText, description: '', comments: [] };
+        newBoard.columns[addModalCol].taskIds.push(newId);
+      }
       return { ...prev, [activeFileId]: newBoard };
     });
     setAddModalCol(null);
     setNewCardText('');
   };
 
-  // --- DETAIL MODAL LOGIC ---
-  const handleOpenDetail = (taskId) => {
-    const task = boards[activeFileId].tasks[taskId];
-    setDetailModalTask(task);
-    setDescriptionText(task.description || '');
-  };
-
   const handleSaveDetail = () => {
     setBoards(prev => {
-      const newBoard = JSON.parse(JSON.stringify(prev[activeFileId]));
+      const currentBoard = prev[activeFileId] || {};
+      const newBoard = JSON.parse(JSON.stringify(currentBoard));
+      
+      if (!newBoard.tasks || !newBoard.tasks[detailModalTask.id]) return prev;
+
       newBoard.tasks[detailModalTask.id].description = descriptionText;
       if (newCommentText.trim()) {
-        if (!newBoard.tasks[detailModalTask.id].comments) newBoard.tasks[detailModalTask.id].comments = [];
+        if (!Array.isArray(newBoard.tasks[detailModalTask.id].comments)) {
+          newBoard.tasks[detailModalTask.id].comments = [];
+        }
         newBoard.tasks[detailModalTask.id].comments.push(newCommentText);
       }
       return { ...prev, [activeFileId]: newBoard };
@@ -226,38 +357,110 @@ export default function Website({ registeredUser, onLogout }) {
     setNewCommentText('');
     setDetailModalTask(null);
   };
+  const handleOpenDetail = (taskId) => {
+    const currentBoard = boards[activeFileId] || {};
+    const task = currentBoard.tasks?.[taskId];
+    if (!task) return;
+    
+    setDetailModalTask(task);
+    setDescriptionText(task.description || '');
+  };
 
-  const activeBoard = boards[activeFileId];
-  const activeTask = activeId ? activeBoard.tasks[activeId] : null; 
-  const columnOrder = ['backlog', 'todo', 'doing', 'done'];
+  // Safe Rendering Defaults
+  const activeBoard = boards[activeFileId] || { columnOrder: [], columns: {}, tasks: {} };
+  const columnOrder = Array.isArray(activeBoard.columnOrder) ? activeBoard.columnOrder : [];
+  const activeTask = activeId && activeBoard.tasks ? activeBoard.tasks[activeId] : null; 
 
   return (
     <div className="app-container">
       {/* VS CODE SIDEBAR */}
       <div className="sidebar vscode-sidebar">
-        <h3 className="sidebar-header-title">EXPLORER</h3>
+        <div className="sidebar-header">
+          <h3 className="sidebar-header-title">EXPLORER</h3>
+          <div className="sidebar-actions">
+            <svg onClick={startAddFile} title="New File" className="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            <svg onClick={startAddFolder} title="New Folder" className="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              <line x1="12" y1="11" x2="12" y2="17"></line>
+              <line x1="9" y1="14" x2="15" y2="14"></line>
+            </svg>
+          </div>
+        </div>
+
         <div className="sidebar-scroll">
           {sidebarStructure.map(folder => (
-            <div key={folder.id} className="folder-container">
+            <div key={folder.id} className="folder-container" onMouseEnter={() => setActiveFolderId(folder.id)}>
               <div className="folder-header" onClick={() => toggleFolder(folder.id)}>
-                <span className="chevron">{expandedFolders[folder.id] ? 'v' : '>'}</span>
-                <span className="folder-name">{folder.title}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="chevron">{expandedFolders[folder.id] ? 'v' : '>'}</span>
+                  <span className="folder-name">{folder.title}</span>
+                </div>
+                <svg onClick={(e) => handleDeleteFolder(e, folder.id)} className="delete-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
               </div>
+              
               {expandedFolders[folder.id] && (
                 <div className="folder-contents">
                   {folder.files.map(file => (
                     <div 
                       key={file.id} 
                       className={`file-item ${activeFileId === file.id ? 'active' : ''}`}
-                      onClick={() => setActiveFileId(file.id)}
+                      onClick={() => { setActiveFileId(file.id); setActiveFolderId(folder.id); }}
                     >
-                      <span className="file-icon">{"{ }"}</span> {file.name}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="file-icon">{"{ }"}</span> {file.name}
+                      </div>
+                      <svg onClick={(e) => handleDeleteFile(e, folder.id, file.id)} className="delete-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
                     </div>
                   ))}
+                  
+                  {inlineAction?.type === 'file' && inlineAction.targetFolderId === folder.id && (
+                    <div className="file-item">
+                      <span className="file-icon">{"{ }"}</span>
+                      <input 
+                        autoFocus
+                        className="inline-input"
+                        value={inlineValue}
+                        onChange={e => setInlineValue(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') handleInlineSubmit();
+                          if (e.key === 'Escape') { setInlineAction(null); setInlineValue(''); }
+                        }}
+                        onBlur={handleInlineSubmit}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           ))}
+
+          {inlineAction?.type === 'folder' && (
+             <div className="folder-header">
+                <span className="chevron">{'>'}</span>
+                <input 
+                  autoFocus
+                  className="inline-input folder-inline-input"
+                  value={inlineValue}
+                  onChange={e => setInlineValue(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleInlineSubmit();
+                    if (e.key === 'Escape') { setInlineAction(null); setInlineValue(''); }
+                  }}
+                  onBlur={handleInlineSubmit}
+                />
+             </div>
+          )}
         </div>
       </div>
 
@@ -265,7 +468,7 @@ export default function Website({ registeredUser, onLogout }) {
       <div className="workspace">
         <div className="header">
           <div className="header-path">
-            Aether <span className="path-slash">/</span> Workspace <span className="path-slash">/</span> {sidebarStructure.flatMap(f => f.files).find(f => f.id === activeFileId)?.name}
+            Aether <span className="path-slash">/</span> Workspace <span className="path-slash">/</span> {sidebarStructure.flatMap(f => f.files).find(f => f.id === activeFileId)?.name || 'No File Selected'}
           </div>
           <div className="header-user">
             <span className="user-name">{registeredUser?.name || 'Guest'}</span>
@@ -275,42 +478,96 @@ export default function Website({ registeredUser, onLogout }) {
         </div>
 
         <div className="board-canvas">
-          <DndContext collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
-            {columnOrder.map(colId => {
-              const column = activeBoard.columns[colId];
-              const tasks = column.taskIds.map(taskId => activeBoard.tasks[taskId]);
+          {activeFileId ? (
+            <DndContext collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
+              
+              {/* RENDER COLUMNS DYNAMICALLY */}
+              {columnOrder.map(colId => {
+                const column = activeBoard.columns?.[colId];
+                if (!column) return null;
+                
+                // Safe task mapping to completely stop the crash in its tracks
+                const safeTaskIds = Array.isArray(column.taskIds) ? column.taskIds : [];
+                const tasks = safeTaskIds.map(taskId => activeBoard.tasks?.[taskId]).filter(Boolean);
 
-              return (
-                <BoardColumn 
-                  key={column.id} 
-                  column={column} 
-                  tasks={tasks} 
-                  onOpenAddModal={(colId) => setAddModalCol(colId)} 
-                  onOpenDetail={handleOpenDetail}
-                  user={registeredUser} 
-                />
-              );
-            })}
+                return (
+                  <BoardColumn 
+                    key={column.id} 
+                    column={column} 
+                    tasks={tasks} 
+                    onOpenAddModal={(colId) => setAddModalCol(colId)} 
+                    onOpenDetail={handleOpenDetail}
+                    onEditList={(id, title) => setListModal({ isOpen: true, mode: 'edit', colId: id, title })}
+                    onDeleteList={(id) => setDeleteListModal({ isOpen: true, colId: id })}
+                    user={registeredUser} 
+                  />
+                );
+              })}
 
-            <DragOverlay>
-              {activeTask ? (
-                <div className="card drag-overlay-card">
-                  <p className="card-text">{activeTask.content}</p>
-                  <div className="card-footer">
-                    <div className="comment-wrapper">
-                      <svg className="comment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                      </svg>
-                      <span>{activeTask.comments ? activeTask.comments.length : 0}</span>
-                    </div>
-                    <div className="card-avatar">{registeredUser?.name ? registeredUser.name.charAt(0).toUpperCase() : 'U'}</div>
-                  </div>
+              {/* ADD NEW LIST BUTTON */}
+              <div className="add-list-zone" onClick={() => setListModal({ isOpen: true, mode: 'add', colId: null, title: '' })}>
+                <div className="dashed-box">
+                  <span className="plus-icon">+</span> Add a list
                 </div>
-              ) : null}
-            </DragOverlay>
-          </DndContext>
+              </div>
+
+              <DragOverlay>
+                {activeTask ? (
+                  <div className="card drag-overlay-card">
+                    <p className="card-text">{activeTask.content}</p>
+                    <div className="card-footer">
+                      <div className="comment-wrapper">
+                        <svg className="comment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <span>{Array.isArray(activeTask.comments) ? activeTask.comments.length : 0}</span>
+                      </div>
+                      <div className="card-avatar">{registeredUser?.name ? registeredUser.name.charAt(0).toUpperCase() : 'U'}</div>
+                    </div>
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          ) : (
+            <div style={{ padding: '40px', color: '#64748b' }}>Select or create a file in the Explorer to begin.</div>
+          )}
         </div>
       </div>
+
+      {/* --- ADD/EDIT LIST MODAL --- */}
+      {listModal.isOpen && (
+        <div className="modal-overlay" onClick={() => setListModal({ isOpen: false, mode: 'add', colId: null, title: '' })}>
+          <div className="modal-box small-modal" onClick={e => e.stopPropagation()}>
+            <h3>{listModal.mode === 'add' ? 'Add New List' : 'Edit List Name'}</h3>
+            <input 
+              autoFocus
+              type="text" 
+              placeholder="Enter list title..." 
+              value={listModal.title} 
+              onChange={e => setListModal({ ...listModal, title: e.target.value })}
+              onKeyDown={e => e.key === 'Enter' && handleSaveList()}
+            />
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={() => setListModal({ isOpen: false, mode: 'add', colId: null, title: '' })}>Cancel</button>
+              <button className="btn-primary" onClick={handleSaveList}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- DELETE LIST CONFIRMATION MODAL --- */}
+      {deleteListModal.isOpen && (
+        <div className="modal-overlay" onClick={() => setDeleteListModal({ isOpen: false, colId: null })}>
+          <div className="modal-box small-modal" onClick={e => e.stopPropagation()}>
+            <h3 style={{ color: '#ef4444' }}>Delete List?</h3>
+            <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Are you sure? This will permanently delete this list and all cards inside it.</p>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={() => setDeleteListModal({ isOpen: false, colId: null })}>Cancel</button>
+              <button className="btn-primary" style={{ background: '#ef4444' }} onClick={confirmDeleteList}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- SMALL MODAL: ADD CARD --- */}
       {addModalCol && (
