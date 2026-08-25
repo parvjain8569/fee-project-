@@ -5,8 +5,9 @@ import { CSS } from '@dnd-kit/utilities';
 import { v4 as uuidv4 } from 'uuid';
 import './App.css'; 
 
-const BOARDS_DB_KEY = 'aether-boards-v4';
-const SIDEBAR_DB_KEY = 'aether-sidebar-v4';
+// V7 keys force a totally clean slate so old .json files are deleted from memory
+const BOARDS_DB_KEY = 'aether-v7-boards';
+const SIDEBAR_DB_KEY = 'aether-v7-sidebar';
 
 // ==========================================
 // DRAGGABLE CARD COMPONENT
@@ -113,7 +114,7 @@ export default function Website({ registeredUser, onLogout }) {
   const [listModal, setListModal] = useState({ isOpen: false, mode: 'add', colId: null, title: '' });
   const [deleteListModal, setDeleteListModal] = useState({ isOpen: false, colId: null });
 
-  // Load Data safely
+  // Load Data
   const [boards, setBoards] = useState(() => {
     try {
       const saved = localStorage.getItem(BOARDS_DB_KEY);
@@ -126,9 +127,10 @@ export default function Website({ registeredUser, onLogout }) {
   const [sidebarStructure, setSidebarStructure] = useState(() => {
     try {
       const saved = localStorage.getItem(SIDEBAR_DB_KEY);
-      return saved ? JSON.parse(saved) : [{ id: 'folder-1', title: 'PROJECTS', files: [{ id: 'file-1', name: 'New Board.json' }] }];
+      // Clean default starter file name
+      return saved ? JSON.parse(saved) : [{ id: 'folder-1', title: 'PROJECTS', files: [{ id: 'file-1', name: 'New Board' }] }];
     } catch {
-      return [{ id: 'folder-1', title: 'PROJECTS', files: [{ id: 'file-1', name: 'New Board.json' }] }];
+      return [{ id: 'folder-1', title: 'PROJECTS', files: [{ id: 'file-1', name: 'New Board' }] }];
     }
   });
 
@@ -190,17 +192,15 @@ export default function Website({ registeredUser, onLogout }) {
 
     } else if (inlineAction.type === 'file') {
       const fileName = inlineValue.trim();
-      const nameWithExt = fileName.endsWith('.json') ? fileName : `${fileName}.json`;
       const newFileId = `file-${uuidv4()}`;
 
       setSidebarStructure(prev => prev.map(folder => {
         if (folder.id === inlineAction.targetFolderId) {
-          return { ...folder, files: [...folder.files, { id: newFileId, name: nameWithExt }] };
+          return { ...folder, files: [...folder.files, { id: newFileId, name: fileName }] };
         }
         return folder;
       }));
 
-      // Initialize an empty board properly
       setBoards(prev => ({
         ...prev,
         [newFileId]: { columnOrder: [], columns: {}, tasks: {} }
@@ -212,19 +212,13 @@ export default function Website({ registeredUser, onLogout }) {
     setInlineValue('');
   };
 
-  // --- LIST (COLUMN) LOGIC (Fixed Deep Cloning) ---
+  // --- LIST (COLUMN) LOGIC ---
   const handleSaveList = () => {
     if (!listModal.title.trim() || !activeFileId) return;
 
     setBoards(prev => {
-      const currentBoard = prev[activeFileId] || {};
-      
-      // PROPER DEEP CLONE to prevent the mutation bug
+      const currentBoard = prev[activeFileId] || { columnOrder: [], columns: {}, tasks: {} };
       const newBoard = JSON.parse(JSON.stringify(currentBoard));
-
-      if (!Array.isArray(newBoard.columnOrder)) newBoard.columnOrder = [];
-      if (!newBoard.columns) newBoard.columns = {};
-      if (!newBoard.tasks) newBoard.tasks = {};
 
       if (listModal.mode === 'add') {
         const newColId = `col-${uuidv4()}`;
@@ -244,12 +238,9 @@ export default function Website({ registeredUser, onLogout }) {
 
   const confirmDeleteList = () => {
     setBoards(prev => {
-      const currentBoard = prev[activeFileId] || {};
-      // PROPER DEEP CLONE
+      const currentBoard = prev[activeFileId] || { columnOrder: [], columns: {}, tasks: {} };
       const newBoard = JSON.parse(JSON.stringify(currentBoard));
       
-      if (!newBoard.columns || !Array.isArray(newBoard.columnOrder)) return prev;
-
       const colId = deleteListModal.colId;
       
       if (newBoard.columns[colId] && Array.isArray(newBoard.columns[colId].taskIds)) {
@@ -279,7 +270,7 @@ export default function Website({ registeredUser, onLogout }) {
     const destId = over.id;
     
     setBoards(prev => {
-      const currentBoard = prev[activeFileId] || {};
+      const currentBoard = prev[activeFileId] || { columnOrder: [], columns: {}, tasks: {} };
       const newBoard = JSON.parse(JSON.stringify(currentBoard));
 
       let sourceColId = null;
@@ -319,12 +310,9 @@ export default function Website({ registeredUser, onLogout }) {
     const newId = `t-${uuidv4()}`;
     
     setBoards(prev => {
-      const currentBoard = prev[activeFileId] || {};
+      const currentBoard = prev[activeFileId] || { columnOrder: [], columns: {}, tasks: {} };
       const newBoard = JSON.parse(JSON.stringify(currentBoard));
       
-      if (!newBoard.tasks) newBoard.tasks = {};
-      if (!newBoard.columns) newBoard.columns = {};
-
       if (newBoard.columns[addModalCol]) {
         if (!Array.isArray(newBoard.columns[addModalCol].taskIds)) {
           newBoard.columns[addModalCol].taskIds = [];
@@ -338,9 +326,18 @@ export default function Website({ registeredUser, onLogout }) {
     setNewCardText('');
   };
 
+  const handleOpenDetail = (taskId) => {
+    const currentBoard = boards[activeFileId] || {};
+    const task = currentBoard.tasks?.[taskId];
+    if (!task) return;
+    
+    setDetailModalTask(task);
+    setDescriptionText(task.description || '');
+  };
+
   const handleSaveDetail = () => {
     setBoards(prev => {
-      const currentBoard = prev[activeFileId] || {};
+      const currentBoard = prev[activeFileId] || { columnOrder: [], columns: {}, tasks: {} };
       const newBoard = JSON.parse(JSON.stringify(currentBoard));
       
       if (!newBoard.tasks || !newBoard.tasks[detailModalTask.id]) return prev;
@@ -357,14 +354,6 @@ export default function Website({ registeredUser, onLogout }) {
     setNewCommentText('');
     setDetailModalTask(null);
   };
-  const handleOpenDetail = (taskId) => {
-    const currentBoard = boards[activeFileId] || {};
-    const task = currentBoard.tasks?.[taskId];
-    if (!task) return;
-    
-    setDetailModalTask(task);
-    setDescriptionText(task.description || '');
-  };
 
   // Safe Rendering Defaults
   const activeBoard = boards[activeFileId] || { columnOrder: [], columns: {}, tasks: {} };
@@ -378,32 +367,61 @@ export default function Website({ registeredUser, onLogout }) {
         <div className="sidebar-header">
           <h3 className="sidebar-header-title">EXPLORER</h3>
           <div className="sidebar-actions">
+            
+            {/* THE GLOBAL NEW FILE BUTTON */}
             <svg onClick={startAddFile} title="New File" className="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
               <line x1="12" y1="18" x2="12" y2="12"></line>
               <line x1="9" y1="15" x2="15" y2="15"></line>
             </svg>
+
+            {/* THE GLOBAL NEW FOLDER BUTTON */}
             <svg onClick={startAddFolder} title="New Folder" className="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
               <line x1="12" y1="11" x2="12" y2="17"></line>
               <line x1="9" y1="14" x2="15" y2="14"></line>
             </svg>
+            
           </div>
         </div>
 
         <div className="sidebar-scroll">
           {sidebarStructure.map(folder => (
-            <div key={folder.id} className="folder-container" onMouseEnter={() => setActiveFolderId(folder.id)}>
+            <div key={folder.id} className="folder-container">
               <div className="folder-header" onClick={() => toggleFolder(folder.id)}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span className="chevron">{expandedFolders[folder.id] ? 'v' : '>'}</span>
                   <span className="folder-name">{folder.title}</span>
                 </div>
-                <svg onClick={(e) => handleDeleteFolder(e, folder.id)} className="delete-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
+                
+                {/* HOVER ACTIONS FOR THIS SPECIFIC FOLDER */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  
+                  {/* ADD FILE ICON (Directly targets this folder) */}
+                  <svg 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedFolders(prev => ({ ...prev, [folder.id]: true }));
+                      setInlineAction({ type: 'file', targetFolderId: folder.id });
+                      setInlineValue('');
+                    }}
+                    className="delete-icon" 
+                    title="New File Here"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                  </svg>
+
+                  {/* DELETE FOLDER ICON */}
+                  <svg onClick={(e) => handleDeleteFolder(e, folder.id)} className="delete-icon" title="Delete Folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </div>
               </div>
               
               {expandedFolders[folder.id] && (
@@ -486,7 +504,6 @@ export default function Website({ registeredUser, onLogout }) {
                 const column = activeBoard.columns?.[colId];
                 if (!column) return null;
                 
-                // Safe task mapping to completely stop the crash in its tracks
                 const safeTaskIds = Array.isArray(column.taskIds) ? column.taskIds : [];
                 const tasks = safeTaskIds.map(taskId => activeBoard.tasks?.[taskId]).filter(Boolean);
 
