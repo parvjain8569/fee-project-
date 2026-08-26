@@ -12,6 +12,9 @@ const SIDEBAR_DB_KEY = 'aether-v7-sidebar';
 // ==========================================
 // DRAGGABLE CARD COMPONENT
 // ==========================================
+// ==========================================
+// DRAGGABLE CARD COMPONENT
+// ==========================================
 const SortableCard = ({ task, user, onOpenDetail, colId }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
   
@@ -25,15 +28,23 @@ const SortableCard = ({ task, user, onOpenDetail, colId }) => {
   const commentCount = Array.isArray(task.comments) ? task.comments.length : 0;
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="card">
-      <p className="card-text">{task.content}</p>
+    /* Removed the drag listeners from the main card container */
+    <div ref={setNodeRef} style={style} className="card">
       
+      {/* 1. DRAG ZONE: Only this section triggers the drag */}
+      <div {...attributes} {...listeners} style={{ cursor: 'grab', paddingBottom: '10px' }}>
+        <p className="card-text" style={{ pointerEvents: 'none' }}>{task.content}</p>
+      </div>
+      
+      {/* 2. CLICK ZONE: This section is immune to drag events, allowing flawless clicks */}
       <div className="card-footer">
         <div 
           className="comment-wrapper" 
           style={{ cursor: 'pointer' }}
-          onPointerDown={(e) => e.stopPropagation()} 
-          onClick={() => onOpenDetail(task.id, colId)}
+          onClick={(e) => {
+            e.stopPropagation(); // Stops any background bubbling
+            onOpenDetail(task.id, colId);
+          }}
         >
           <svg className="comment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
