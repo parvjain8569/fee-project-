@@ -1,0 +1,217 @@
+/* ================================
+   GENERAL AUTH
+================================ */
+
+.auth-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-box {
+  width: 380px;
+  padding: 35px;
+  background: white;
+  border-radius: 15px;
+}
+
+.stack-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.input-group label {
+  font-weight: 600;
+}
+
+.input-group input {
+  padding: 11px;
+  border: 1px solid #ccc;
+  border-radius: 7px;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 7px;
+  background: #5f5145;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.auth-footer span {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+
+/* ================================
+   WELCOME PAGE
+================================ */
+
+.welcome-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+}
+
+.welcome-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.boardly-logo {
+  width: 650px;
+  max-width: 80%;
+}
+
+.start-button {
+  padding: 14px 45px;
+  border: none;
+  border-radius: 8px;
+  background: #5f5145;
+  color: white;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+
+/* ================================
+   LOGIN PAGE
+================================ */
+
+.login-background {
+  min-height: 100vh;
+  width: 100%;
+  background-image: url('./assets/background.jpg');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+}
+
+
+/* LOGIN BOX ON LEFT */
+
+.login-overlay {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  padding-left: 5%;
+}
+
+
+/* TRANSPARENT LOGIN BOX */
+
+.login-card {
+  width: 380px;
+  padding: 35px;
+  border-radius: 20px;
+
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+
+/* LOGIN TEXT */
+
+.login-card h2 {
+  margin: 0 0 10px;
+  font-size: 32px;
+  color: white;
+}
+
+.login-subtitle {
+  color: white;
+  margin-bottom: 25px;
+}
+
+
+/* LOGIN INPUTS */
+
+.login-card label {
+  color: white;
+}
+
+.login-card input {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.login-card input::placeholder {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+
+/* LOGIN BUTTON */
+
+.login-card .btn-primary {
+  background: rgba(255, 255, 255, 0.8);
+  color: #4a4038;
+}
+
+.login-card .btn-primary:hover {
+  background: white;
+}
+
+
+/* REGISTER LINK */
+
+.login-card .auth-footer {
+  color: white;
+}
+
+.login-card .auth-footer span {
+  color: white;
+  text-decoration: underline;
+}
+
+
+/* ERROR */
+
+.error-message {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 7px;
+  background: rgba(255, 80, 80, 0.25);
+  color: white;
+}
+
+
+/* ================================
+   MOBILE
+================================ */
+
+@media (max-width: 768px) {
+  .login-overlay {
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 380px;
+  }
+}
