@@ -1,269 +1,415 @@
+/* ==========================================================================
+   BOARDLY TRELLO SUNSET DESIGN SYSTEM (GLOBAL CSS)
+   File: /src/style.css
+   Purpose: Defines all CSS variables, typography, background wallpapers,
+            sidebar explorer styles, Kanban column trays, tactile cards,
+            drag-and-drop animations, modal dialogs, and authentication layouts.
+   ========================================================================== */
+
+/* Load custom Google Fonts: Inter (UI typography) and Fira Code (monospace accents) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
 
+/* ==========================================================================
+   CSS CUSTOM PROPERTIES / DESIGN TOKENS
+   Search here to customize colors, fonts, and drop shadows!
+   ========================================================================== */
 :root {
-  --color-navy: #0b1120;
-  --color-navy-light: #0f172a;
-  --color-slate-dark: #1e293b;
-  --color-blue: #2563eb;
-  --color-blue-hover: #1d4ed8;
-  --color-purple: #9333ea;
-  --color-purple-light: #f3e8ff;
-  --color-gold: #f59e0b;
-  --color-gold-light: #fef3c7;
-  --color-mint: #10b981;
-  --color-mint-light: #ecfdf5;
-  --color-bg-light: #f8fafc;
-  --color-border: #e2e8f0;
-  --color-text-main: #0f172a;
-  --color-text-muted: #64748b;
-  --font-main: 'Inter', -apple-system, sans-serif;
-  --font-mono: 'Fira Code', monospace;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-  --shadow-glow: 0 4px 14px 0 rgba(37, 99, 235, 0.35);
+  /* Font Family Definitions */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* Main UI Font */
+  --font-mono: 'Fira Code', ui-monospace, monospace;                                      /* Code / Monospace */
+
+  /* Trello Neutral Column & Text Color Tokens */
+  --trello-column-bg: #f1f2f4;   /* Background color of Kanban column trays */
+  --trello-text-dark: #172b4d;   /* Main heading & card title text color */
+  --trello-text-subtle: #5e6c84; /* Secondary subtle body text */
+  --trello-text-muted: #6b778c;  /* Muted placeholder & icon color */
+
+  /* Vibrant Status Pill Label Color Tokens */
+  --trello-label-orange: #ff9f1a; /* Orange status tag (Marketing / External) */
+  --trello-label-blue: #00c7e5;   /* Cyan blue status tag (Design) */
+  --trello-label-green: #22c55e;  /* Green status tag (Done / Completed) */
+  --trello-label-purple: #a855f7; /* Purple status tag (In Progress / Development) */
+  --trello-label-royal: #2563eb;  /* Royal blue primary brand color */
+
+  /* Left Sidebar Midnight Dark Palette Tokens */
+  --sidebar-bg: #090d16;                           /* Main dark background for Explorer sidebar */
+  --sidebar-header: #05080e;                       /* Header bar background behind Boardly logo in sidebar */
+  --sidebar-border: rgba(255, 255, 255, 0.08);     /* Border lines separating sidebar sections */
+
+  /* Elevation Drop Shadows */
+  --shadow-trello-card: 0 1px 2px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31); /* Default card shadow */
+  --shadow-trello-hover: 0 8px 18px -2px rgba(9, 30, 66, 0.25), 0 2px 4px rgba(9, 30, 66, 0.15); /* Lifted card shadow on hover */
+  --shadow-column: 0 8px 24px rgba(0, 0, 0, 0.22);                                       /* Deep shadow under columns */
 }
 
+/* ==========================================================================
+   GLOBAL RESET & BASE STYLES
+   ========================================================================== */
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: var(--font-main);
+  box-sizing: border-box;                /* Include padding & border in width/height calculations */
+  margin: 0;                             /* Remove browser default margins */
+  padding: 0;                            /* Remove browser default paddings */
+  font-family: var(--font-sans);         /* Apply clean Inter font across whole page */
+  -webkit-font-smoothing: antialiased;   /* Enable smooth font rendering in WebKit/Chrome/Safari */
+  -moz-osx-font-smoothing: grayscale;    /* Enable smooth font rendering in Firefox macOS */
 }
 
 html, body {
-  width: 100%;
-  height: 100vh;
+  width: 100%;                           /* Full screen viewport width */
+  height: 100vh;                         /* Full screen viewport height */
   margin: 0;
   padding: 0;
-  background-color: #f1f5f9;
-  color: var(--color-text-main);
-  overflow: hidden;
-  -webkit-font-smoothing: antialiased;
+  background-color: #c2410c;             /* Sunset orange fallback color while wallpaper loads */
+  color: var(--trello-text-dark);        /* Default dark text color */
+  overflow: hidden;                      /* Prevent browser double-scrollbars */
 }
 
+/* Mount Container for the Entire Application */
 #app {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
+  width: 100vw;                          /* Fill browser width */
+  height: 100vh;                         /* Fill browser height */
+  display: flex;                         /* Flex layout aligning sidebar next to workspace */
 }
 
-/* =========================================
-   CUSTOM SCROLLBAR STYLING
-========================================== */
+/* ==========================================================================
+   CUSTOM SLEEK SCROLLBARS
+   ========================================================================== */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 6px;                            /* Vertical scrollbar width */
+  height: 6px;                           /* Horizontal scrollbar height */
 }
-
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: transparent;               /* Invisible scroll track */
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.35); /* Translucent white scroll handle */
+  border-radius: 4px;                    /* Rounded pill scroll handle */
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(255, 255, 255, 0.55); /* Brighter scroll handle when hovered */
 }
 
 .vscode-sidebar ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #334155;                   /* Dark slate scroll handle inside sidebar */
 }
 
-.vscode-sidebar ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
-}
-
-/* =========================================
-   APP LAYOUT & CONTAINER
-========================================== */
+/* ==========================================================================
+   APP CONTAINER LAYOUT
+   ========================================================================== */
 .app-container {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-  background: #f1f5f9;
+  display: flex;                         /* Place Sidebar and Workspace side-by-side */
+  height: 100vh;                         /* Fill entire vertical viewport */
+  width: 100vw;                          /* Fill entire horizontal viewport */
+  overflow: hidden;                      /* Trap scrolling inside components */
+  background: #090d16;                   /* Dark midnight fallback background */
 }
 
-/* =========================================
-   VS CODE STYLE EXPLORER SIDEBAR
-========================================== */
+/* ==========================================================================
+   SIDEBAR — EXPLORER TREE (VS CODE STYLE MIDNIGHT DARK)
+   ========================================================================== */
 .vscode-sidebar {
-  width: 260px;
-  min-width: 260px;
-  background: var(--color-navy);
-  color: #cccccc;
+  width: 260px;                          /* Fixed sidebar width */
+  min-width: 260px;                      /* Prevent sidebar from squishing */
+  background: var(--sidebar-bg);         /* Deep obsidian background */
   display: flex;
-  flex-direction: column;
-  border-right: 1px solid #1e293b;
+  flex-direction: column;                /* Stack header, section title, and folder tree */
+  border-right: 1px solid var(--sidebar-border); /* Subtle dividing line to the right */
   text-align: left;
-  user-select: none;
-  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05);
+  user-select: none;                     /* Prevent accidental text highlight while dragging */
+  position: relative;
+  z-index: 20;                           /* Keep sidebar above workspace horizon */
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25); /* Subtle shadow projected onto board */
 }
 
+/* Top Branding Header in Sidebar */
 .sidebar-brand-header {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 18px 20px;
-  border-bottom: 1px solid #1e293b;
-  background: #070b14;
+  align-items: center;                   /* Vertically align logo with title */
+  gap: 12px;                             /* Space between logo and brand text */
+  padding: 16px 18px;                    /* Internal breathing room */
+  border-bottom: 1px solid var(--sidebar-border); /* Divider line under brand */
+  background: var(--sidebar-header);     /* Slightly darker background than sidebar */
 }
 
 .sidebar-brand-logo {
-  height: 34px;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  height: 38px;                          /* Logo image height */
+  width: 38px;                           /* Logo image width */
+  object-fit: contain;                   /* Preserve logo aspect ratio */
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5)); /* Soft shadow under logo */
+  transition: transform 0.25s ease;      /* Smooth tilt animation */
+}
+
+.sidebar-brand-logo:hover {
+  transform: rotate(-4deg) scale(1.08);  /* Playful tilt & zoom on hover */
 }
 
 .sidebar-brand-title {
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #ffffff;
-  letter-spacing: -0.5px;
+  font-size: 1.15rem;                    /* Brand title font size */
+  font-weight: 800;                      /* Bold lettering */
+  color: #ffffff !important;             /* Pure white text */
+  letter-spacing: -0.4px;
+  line-height: 1.1;
 }
 
 .sidebar-brand-tagline {
-  font-size: 0.65rem;
-  color: var(--color-gold);
-  font-weight: 700;
-  letter-spacing: 1px;
+  font-size: 0.6rem;                     /* Small uppercase motto */
+  color: #fbbf24 !important;             /* Bright amber gold accent */
+  font-weight: 800;
+  letter-spacing: 1.2px;                 /* Spaced out letters */
+  margin-top: 3px;
 }
 
+/* Sidebar "WORKSPACES" Sub-header Bar */
 .sidebar-section-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between;        /* Push title to left and action icons to right */
   align-items: center;
-  padding: 16px 20px 8px 20px;
+  padding: 16px 18px 8px 18px;
 }
 
 .sidebar-header-title {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   letter-spacing: 1.5px;
-  color: #94a3b8;
+  color: #94a3b8 !important;             /* Muted silver text */
   font-weight: 800;
   margin: 0;
-  text-transform: uppercase;
+  text-transform: uppercase;             /* Capitalize WORKSPACES */
 }
 
 .sidebar-actions {
   display: flex;
-  gap: 12px;
+  gap: 6px;                              /* Space between "+ File" and "+ Folder" buttons */
   align-items: center;
 }
 
 .action-icon {
   width: 16px;
   height: 16px;
-  color: #94a3b8;
+  color: #94a3b8 !important;             /* Muted silver icon */
   cursor: pointer;
-  transition: all 0.2s ease;
+  padding: 2px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
 }
 
 .action-icon:hover {
-  color: #ffffff;
-  transform: scale(1.15);
+  color: #ffffff !important;             /* White icon on hover */
+  background: rgba(255, 255, 255, 0.12); /* Subtle glow pill */
+  transform: scale(1.1);                 /* Slight pop on hover */
 }
 
+/* Scrollable Tree Area */
 .sidebar-scroll {
-  flex: 1;
-  overflow-y: auto;
-  padding-bottom: 20px;
+  flex: 1;                               /* Take all remaining vertical height */
+  overflow-y: auto;                      /* Scroll vertically when many files exist */
+  padding: 6px 10px 20px 10px;
 }
 
 .folder-container {
-  position: relative;
+  margin-bottom: 4px;                    /* Gap between folders */
 }
 
 .folder-header {
-  padding: 9px 20px;
+  padding: 7px 10px;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between;        /* Push title left and action icons right */
   align-items: center;
   cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #e2e8f0;
+  border-radius: 6px;
   transition: all 0.15s ease;
 }
 
 .folder-header:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08); /* Highlight row on hover */
 }
 
-.chevron {
-  font-size: 0.75rem;
-  width: 12px;
-  color: var(--color-gold);
+.folder-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;                              /* Space between chevron, folder icon, and text */
+  overflow: hidden;
+}
+
+.folder-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;                              /* Space between folder action buttons */
+}
+
+.chevron-svg {
+  width: 14px;
+  height: 14px;
+  color: #fbbf24 !important;             /* Amber gold chevron arrow */
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.chevron-svg.open {
+  transform: rotate(90deg);              /* Rotate chevron 90deg downwards when folder is open */
+}
+
+.folder-icon-svg {
+  width: 16px;
+  height: 16px;
+  color: #f59e0b;                        /* Golden folder icon */
+  flex-shrink: 0;
+}
+
+.folder-name {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #e2e8f0 !important;             /* High contrast silver text */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;              /* Truncate long folder titles with '...' */
 }
 
 .folder-contents {
-  padding-left: 10px;
+  padding-left: 8px;                     /* Indent child files inside folder */
+  margin-top: 2px;
 }
 
+/* Board File Rows inside Folder */
 .file-item {
-  padding: 8px 20px 8px 32px;
+  padding: 6px 10px 6px 12px;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between;        /* Push board label left, rename/delete right */
   align-items: center;
   cursor: pointer;
-  font-size: 0.85rem;
-  color: #94a3b8;
+  border-radius: 6px;
+  margin: 1px 0;
   transition: all 0.15s ease;
-  border-radius: 4px;
-  margin: 1px 6px;
+  position: relative;
+}
+
+.file-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.board-icon-svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.file-item:hover .board-icon-svg {
+  transform: scale(1.12);                /* Pop board icon on hover */
+}
+
+.file-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #cbd5e1 !important;             /* Crisp readable light gray */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+  font-family: var(--font-sans);
 }
 
 .file-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08); /* Row highlight on hover */
 }
 
+.file-item:hover .file-label {
+  color: #ffffff !important;             /* White text on hover */
+}
+
+/* Active Selected Board File State */
 .file-item.active {
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.3), rgba(37, 99, 235, 0.1));
-  color: #ffffff;
-  font-weight: 600;
-  border-left: 3px solid var(--color-blue);
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.32) 0%, rgba(37, 99, 235, 0.1) 100%) !important; /* Blue active gradient */
+  border-left: 3px solid #38bdf8 !important; /* Cyan active bar on the left */
 }
 
-.file-icon {
-  font-family: var(--font-mono);
-  color: var(--color-gold);
-  font-size: 0.8rem;
+.file-item.active .file-label {
+  color: #ffffff !important;             /* Bright white text for active board */
+  font-weight: 700 !important;           /* Bold text for active board */
 }
 
-.delete-icon {
+/* Rename & Delete Action Icons (Visible on Hover) */
+.file-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.file-action-icon {
   width: 14px;
   height: 14px;
-  color: #64748b;
-  display: none;
+  color: #94a3b8 !important;
+  opacity: 0;                            /* Hidden by default until hovered */
   cursor: pointer;
-  transition: color 0.15s ease;
+  padding: 1px;
+  border-radius: 3px;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
-.folder-header:hover .delete-icon,
-.file-item:hover .delete-icon {
-  display: block;
+.folder-header:hover .folder-action-icon,
+.file-item:hover .file-action-icon {
+  opacity: 0.75;                         /* Reveal icons when row is hovered */
+}
+
+.file-action-icon:hover {
+  opacity: 1 !important;
+  transform: scale(1.15);
+}
+
+.edit-icon:hover {
+  color: #38bdf8 !important;             /* Cyan highlight on edit / rename icon */
 }
 
 .delete-icon:hover {
-  color: #ef4444;
+  color: #f87171 !important;             /* Red highlight on delete trash icon */
+}
+
+.folder-action-icon {
+  width: 14px;
+  height: 14px;
+  color: #94a3b8 !important;
+  opacity: 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.folder-action-icon:hover {
+  opacity: 1 !important;
+  color: #ffffff !important;
+}
+
+.folder-action-icon.delete-icon:hover {
+  color: #f87171 !important;
+}
+
+/* Inline Text Inputs (For inline creation and renaming) */
+.rename-inline-input {
+  width: 100%;
+  background: #0f172a !important;        /* Deep navy background for rename input */
+  border: 1.5px solid #38bdf8 !important;/* Bright cyan focus border */
+  color: #ffffff !important;             /* Pure white text */
+  padding: 3px 6px !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  border-radius: 4px;
 }
 
 .inline-input {
-  background: #1e293b;
-  border: 1px solid var(--color-blue);
+  background: #141c2e;                   /* Dark background for inline create */
+  border: 1.5px solid #3b82f6;           /* Blue border */
   color: #ffffff;
   outline: none;
   padding: 4px 8px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   border-radius: 4px;
   width: 140px;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .inline-input.folder-inline-input {
@@ -271,30 +417,37 @@ html, body {
   text-transform: uppercase;
 }
 
-/* =========================================
-   MAIN WORKSPACE & HEADER BAR
-========================================== */
+/* ==========================================================================
+   WORKSPACE & TRELLO SUNSET LANDSCAPE CANVAS
+   ========================================================================== */
 .workspace {
-  flex: 1;
+  flex: 1;                               /* Take up all space right of sidebar */
   display: flex;
-  flex-direction: column;
-  background: #f1f5f9;
+  flex-direction: column;                /* Top Header on top, Kanban Board underneath */
+  background-image: url('/trello-bg.svg'); /* Sunset Mountain Landscape SVG Wallpaper */
+  background-size: cover;                /* Stretch wallpaper to cover entire canvas */
+  background-position: center bottom;    /* Anchor mountains to the bottom */
+  background-repeat: no-repeat;
   overflow: hidden;
+  position: relative;
 }
 
+/* Frosted Glass Header over Sunset Horizon */
 .header {
-  height: 64px;
-  background: #ffffff;
-  border-bottom: 1px solid var(--color-border);
+  height: 56px;                          /* Top bar height */
+  background: rgba(0, 0, 0, 0.28);       /* Translucent dark glass */
+  backdrop-filter: blur(16px);           /* Frosted glass blur effect */
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18); /* Glass border */
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between;        /* Breadcrumbs left, user controls right */
   align-items: center;
-  padding: 0 28px;
-  box-shadow: var(--shadow-sm);
+  padding: 0 24px;
   position: relative;
   z-index: 10;
 }
 
+/* Rainbow Gradient Accent Stripe pinned at the very top */
 .header::before {
   content: '';
   position: absolute;
@@ -302,433 +455,461 @@ html, body {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--color-blue), var(--color-purple), var(--color-gold));
+  background: linear-gradient(90deg, #388bfd 0%, #a855f7 33%, #fbbf24 66%, #34d399 100%);
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .header-brand-logo {
-  height: 38px;
+  height: 32px;
+  width: 32px;
   object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
 }
 
+/* Header Breadcrumb Pill */
 .header-path {
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: var(--color-navy-light);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;                        /* Crisp white text */
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.16); /* Translucent frosted pill */
+  padding: 5px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
 }
 
 .path-slash {
-  color: #94a3b8;
-  margin: 0 6px;
+  color: rgba(255, 255, 255, 0.6);      /* Dimmer slash separator */
+  margin: 0 8px;
+  font-weight: 400;
 }
 
 .header-user {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 }
 
 .user-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-navy-light);
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #ffffff;
 }
 
+/* User Circular Avatar Initial Badge */
 .avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-blue), var(--color-purple));
-  color: white;
+  background: linear-gradient(135deg, #3b82f6, #a855f7); /* Blue to purple avatar gradient */
+  color: #ffffff;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: 700;
-  font-size: 0.95rem;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  font-weight: 800;
+  font-size: 0.85rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  border: 1.5px solid #ffffff;
 }
 
 .btn-logout {
-  background: transparent;
-  border: 1px solid #cbd5e1;
-  padding: 7px 14px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 6px 14px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #475569;
-  transition: all 0.2s ease;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffffff;
+  transition: all 0.15s ease;
 }
 
 .btn-logout:hover {
-  background: #fef2f2;
-  color: #ef4444;
-  border-color: #fca5a5;
+  background: #ef4444;                   /* Red logout hover */
+  border-color: #ef4444;
 }
 
 .header-auth-buttons {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .btn-login {
-  background: var(--color-blue);
-  color: #ffffff;
+  background: #ffffff;                   /* White button */
+  color: #172b4d;                        /* Dark text */
   border: none;
-  padding: 9px 20px;
-  border-radius: 8px;
+  padding: 7px 16px;
+  border-radius: 6px;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow-glow);
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .btn-login:hover {
-  background: var(--color-blue-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.45);
-}
-
-.btn-login:active {
-  transform: translateY(0);
-}
-
-.btn-register {
-  background: transparent;
-  color: var(--color-blue);
-  border: 1.5px solid #bfdbfe;
-  padding: 8px 18px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.88rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-register:hover {
-  background: #eff6ff;
-  border-color: #93c5fd;
+  background: #f1f2f4;
   transform: translateY(-1px);
 }
 
-/* =========================================
-   KANBAN BOARD CANVAS & COLUMNS
-========================================== */
+.btn-register {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-register:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   KANBAN CANVAS — HORIZONTAL SCROLL AREA
+   ========================================================================== */
 .board-canvas {
   display: flex;
   flex: 1;
-  padding: 30px;
-  gap: 24px;
-  overflow-x: auto;
+  padding: 24px 28px;                    /* Outer padding around columns */
+  gap: 18px;                             /* Space between columns */
+  overflow-x: auto;                      /* Horizontal scrollbar for many columns */
   align-items: flex-start;
   justify-content: flex-start;
+  background: transparent;
 }
 
+/* ==========================================================================
+   TRELLO COLUMN TRAYS (#f1f2f4 SOLID BG WITH 12PX CORNERS)
+   ========================================================================== */
 .column {
-  background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 12px;
-  width: 305px;
-  min-width: 305px;
-  flex-shrink: 0;
-  padding: 18px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  background: var(--trello-column-bg);   /* Trello light gray #f1f2f4 */
+  border: none;
+  border-radius: 12px;                   /* Rounded column corners */
+  width: 290px;                          /* Fixed column width */
+  min-width: 290px;
+  flex-shrink: 0;                        /* Prevent squishing on small screens */
+  padding: 12px 10px 8px 10px;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 124px);
-  transition: all 0.2s ease;
-}
-
-.column:hover {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12);
-  border-color: #94a3b8;
+  max-height: calc(100vh - 110px);       /* Stop column from overflowing screen bottom */
+  box-shadow: var(--shadow-column);      /* Deep soft drop shadow */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .column-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between;        /* Title on left, Edit/Delete on right */
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #f1f5f9;
+  padding: 4px 8px 10px 8px;
 }
 
 .column-header-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .column-title {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #0f172a;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--trello-text-dark);        /* Dark navy heading */
   margin: 0;
-  letter-spacing: -0.2px;
+  letter-spacing: -0.01em;
 }
 
 .column-count {
-  background: #dbeafe;
-  color: #1e40af;
-  font-size: 0.8rem;
-  font-weight: 800;
-  padding: 3px 10px;
-  border-radius: 12px;
+  background: rgba(9, 30, 66, 0.08);    /* Soft pill background */
+  color: var(--trello-text-dark);
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;                   /* Pill badge */
+  min-width: 18px;
+  text-align: center;
 }
 
 .column-actions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
 }
 
 .icon-btn {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #475569;
+  background: transparent;
+  border: none;
+  color: var(--trello-text-muted);
   cursor: pointer;
-  font-size: 0.95rem;
-  padding: 4px 8px;
-  border-radius: 6px;
+  font-size: 0.85rem;
+  padding: 4px 6px;
+  border-radius: 5px;
   transition: all 0.15s ease;
+  line-height: 1;
 }
 
 .icon-btn:hover {
-  color: #0f172a;
-  background: #e2e8f0;
-  border-color: #cbd5e1;
+  color: var(--trello-text-dark);
+  background: rgba(9, 30, 66, 0.08);
 }
 
+/* Card list drop container */
 .task-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  min-height: 60px;
+  gap: 8px;                              /* Space between stacked cards */
+  min-height: 40px;                      /* Allow dropping cards into empty lists */
   flex: 1;
-  overflow-y: auto;
-  padding: 4px 2px;
+  overflow-y: auto;                      /* Vertical scrolling for tall lists */
+  padding: 2px 2px 6px 2px;
 }
 
+/* Drag Over Highlight: Dotted boundary when dragging a card over this column */
 .task-list.drag-over {
-  background: #eff6ff;
-  border-radius: 10px;
-  outline: 2px dashed var(--color-blue);
+  background: rgba(9, 30, 66, 0.08);
+  border-radius: 8px;
+  outline: 2px dashed #0052cc;           /* Blue dashed outline */
+  outline-offset: -2px;
 }
 
-/* =========================================
-   KANBAN CARD STYLING & TAG CHIPS
-========================================== */
+/* ==========================================================================
+   TRELLO WHITE TACTILE CARDS & VIBRANT SOLID STATUS PILLS
+   ========================================================================== */
 .card {
-  background: #ffffff;
-  border: 2px solid #94a3b8;
-  border-radius: 10px;
-  padding: 14px 16px;
-  cursor: grab;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #ffffff;                   /* Pure white card surface */
+  border: none;
+  border-radius: 8px;                    /* 8px rounded card corners */
+  padding: 10px 12px;                    /* Internal card padding */
+  cursor: grab;                          /* Grab hand cursor */
+  box-shadow: var(--shadow-trello-card); /* Authentic Trello subtle drop shadow */
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
   position: relative;
   opacity: 1 !important;
+}
+
+.card:hover {
+  transform: translateY(-2px);           /* Card floats slightly upward on hover */
+  box-shadow: var(--shadow-trello-hover);/* Stronger shadow when hovering */
+}
+
+.card:active {
+  cursor: grabbing;                      /* Closed fist cursor while dragging */
+}
+
+/* Dragging State: Active visual cue during drag */
+.card.dragging {
+  opacity: 0.5 !important;               /* Semi-transparent */
+  border: 1.5px dashed #0052cc;          /* Dashed blue boundary */
+  transform: rotate(2deg);               /* Playful tilt while dragging */
 }
 
 .card-top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 7px;
 }
 
+/* Solid Vibrant Trello Status Labels */
+.card-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  color: #ffffff;
+}
+
+.tag-gold {
+  background: var(--trello-label-orange); /* Vibrant Orange (Marketing / Planned) */
+  color: #ffffff;
+}
+
+.tag-blue {
+  background: var(--trello-label-blue);   /* Vibrant Cyan (Design / Upcoming) */
+  color: #172b4d;
+}
+
+.tag-mint {
+  background: var(--trello-label-green);  /* Vibrant Emerald Green (Done / Completed) */
+  color: #ffffff;
+}
+
+.tag-purple {
+  background: var(--trello-label-purple); /* Vibrant Purple (In Progress / Development) */
+  color: #ffffff;
+}
+
+/* Card Action Buttons (Edit / Delete - Visible on Card Hover) */
 .card-quick-actions {
   display: flex;
-  gap: 6px;
-  opacity: 1 !important;
+  gap: 3px;
+  opacity: 0;                            /* Hidden until card is hovered */
+  transition: opacity 0.15s ease;
+}
+
+.card:hover .card-quick-actions {
+  opacity: 1;                            /* Reveal on card hover */
 }
 
 .card-action-btn {
-  background: #e2e8f0;
-  border: 1px solid #cbd5e1;
-  font-size: 0.85rem;
+  background: rgba(9, 30, 66, 0.05);
+  border: none;
+  font-size: 0.74rem;
   cursor: pointer;
-  padding: 3px 6px;
-  border-radius: 6px;
-  opacity: 1 !important;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--trello-text-subtle);
   transition: all 0.15s ease;
 }
 
 .card-action-btn:hover {
-  background: #cbd5e1;
-  transform: scale(1.1);
+  background: rgba(9, 30, 66, 0.12);
+  color: var(--trello-text-dark);
 }
 
 .card-action-btn.delete-btn:hover {
-  background: #fecdd3;
-  border-color: #f87171;
+  background: #ffebe6;
+  color: #de350b;                        /* Red delete highlight */
 }
 
-.card:hover {
-  box-shadow: 0 10px 25px -3px rgba(37, 99, 235, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-  border-color: #2563eb;
-  transform: translateY(-3px);
-}
-
-.card.dragging {
-  opacity: 1 !important;
-  border: 2px solid var(--color-blue);
-  box-shadow: 0 10px 25px -3px rgba(37, 99, 235, 0.3);
-}
-
-.card-tag {
-  display: inline-block;
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 6px;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  opacity: 1 !important;
-}
-
-.tag-blue {
-  background: #dbeafe;
-  color: #1e40af;
-  border: 1px solid #93c5fd;
-}
-
-.tag-purple {
-  background: #f3e8ff;
-  color: #6b21a8;
-  border: 1px solid #d8b4fe;
-}
-
-.tag-gold {
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fde68a;
-}
-
-.tag-mint {
-  background: #d1fae5;
-  color: #065f46;
-  border: 1px solid #6ee7b7;
-}
-
+/* Card Main Headline Typography */
 .card-text {
-  font-size: 0.95rem;
-  color: #000000;
-  font-weight: 800;
-  line-height: 1.45;
-  margin-bottom: 14px;
+  font-size: 0.88rem;
+  color: var(--trello-text-dark);
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
 }
 
 .card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 10px;
-  border-top: 1.5px solid #e2e8f0;
+  padding-top: 6px;
+  border-top: 1px solid #f4f5f7;        /* Soft dividing line */
 }
 
 .comment-wrapper {
   display: flex;
   align-items: center;
-  gap: 5px;
-  color: #0f172a;
-  font-size: 0.85rem;
-  font-weight: 800;
+  gap: 4px;
+  color: var(--trello-text-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
 }
 
 .comment-icon {
-  width: 16px;
-  height: 16px;
-  color: #1e293b;
+  width: 14px;
+  height: 14px;
+  color: var(--trello-text-muted);
 }
 
 .card-avatar {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-blue), var(--color-purple));
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 800;
+  background: linear-gradient(135deg, #0052cc, #6554c0);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
+/* "+ Add a card" Button */
 .btn-add-card {
   width: 100%;
-  background: #f8fafc;
-  border: 2px dashed #94a3b8;
-  padding: 11px;
+  background: transparent;
+  border: none;
+  padding: 8px 10px;
   border-radius: 8px;
-  color: #0f172a;
-  font-size: 0.9rem;
-  font-weight: 800;
+  color: var(--trello-text-subtle);
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  margin-top: 14px;
-  transition: all 0.2s ease;
+  margin-top: 4px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
 }
 
 .btn-add-card:hover {
-  background: #eff6ff;
-  color: var(--color-blue);
-  border-color: var(--color-blue);
+  background: rgba(9, 30, 66, 0.08);
+  color: var(--trello-text-dark);
 }
 
-/* ADD LIST ZONE */
+/* ==========================================================================
+   ADD LIST ZONE (FROSTED GLASS CARD OVER SUNSET)
+   ========================================================================== */
 .add-list-zone {
-  width: 305px;
-  min-width: 305px;
+  width: 290px;
+  min-width: 290px;
   flex-shrink: 0;
   cursor: pointer;
 }
 
 .dashed-box {
-  border: 2px dashed #64748b;
+  background: rgba(255, 255, 255, 0.28); /* Semi-transparent frosted glass */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 12px;
-  padding: 22px;
+  padding: 14px 18px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  color: #0f172a;
-  font-weight: 800;
-  font-size: 0.98rem;
+  color: #ffffff;                        /* Crisp white text */
+  font-weight: 700;
+  font-size: 0.88rem;
   transition: all 0.2s ease;
-  background: #ffffff;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .add-list-zone:hover .dashed-box {
-  background: #ffffff;
-  border-color: var(--color-gold);
-  color: var(--color-navy-light);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.45); /* Brighter glass on hover */
+  transform: translateY(-2px);           /* Lift on hover */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .plus-icon {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   margin-right: 8px;
-  color: var(--color-gold);
+  color: #ffffff;
   font-weight: 800;
+  line-height: 1;
 }
 
-/* =========================================
-   MODAL OVERLAYS & ANIMATIONS
-========================================== */
+/* ==========================================================================
+   MODAL POPUP DIALOGS (ELEVATED CARDS & BACKDROPS)
+   ========================================================================== */
 @keyframes modalPopIn {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(10px);
+    transform: scale(0.96) translateY(8px); /* Pop in from slightly below */
   }
   to {
     opacity: 1;
@@ -737,31 +918,32 @@ html, body {
 }
 
 .modal-overlay {
-  position: fixed;
+  position: fixed;                       /* Cover entire browser window */
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(15, 23, 42, 0.2);
-  backdrop-filter: none;
+  background: rgba(9, 30, 66, 0.54);     /* Darkened semi-transparent overlay */
+  backdrop-filter: blur(8px);            /* Blur background content */
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 1000;                         /* Ensure modal floats above everything */
 }
 
 .modal-card {
-  background: #ffffff !important;
-  border-radius: 16px;
+  background: #ffffff !important;        /* Pure solid white dialog box */
+  border-radius: 12px;
   width: 90%;
   max-width: 480px;
-  padding: 30px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), 0 0 0 2px #0f172a;
+  padding: 26px;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35); /* Heavy floating shadow */
+  border: 1px solid #dfe1e6;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  border: 2.5px solid #0f172a;
+  gap: 16px;
+  animation: modalPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; /* Smooth entrance */
   opacity: 1 !important;
 }
 
@@ -772,402 +954,403 @@ html, body {
 }
 
 .modal-title {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 800;
-  color: var(--color-navy-light);
-  letter-spacing: -0.3px;
+  color: var(--trello-text-dark);
+  letter-spacing: -0.02em;
 }
 
 .btn-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
-  color: #94a3b8;
+  font-size: 1.35rem;
+  color: var(--trello-text-muted);
   cursor: pointer;
   transition: color 0.15s ease;
+  line-height: 1;
 }
 
 .btn-close:hover {
-  color: var(--color-navy-light);
+  color: var(--trello-text-dark);
 }
 
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 12px;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .btn-cancel {
-  background: transparent;
-  border: 1px solid #cbd5e1;
-  padding: 10px 18px;
-  border-radius: 8px;
-  color: #64748b;
+  background: #ffffff;
+  border: 1px solid #dfe1e6;
+  padding: 8px 16px;
+  border-radius: 6px;
+  color: var(--trello-text-subtle);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .btn-cancel:hover {
-  background: #f8fafc;
-  color: var(--color-navy-light);
+  background: #f4f5f7;
+  color: var(--trello-text-dark);
 }
 
 .btn-confirm {
-  background: var(--color-blue);
+  background: #0052cc;                   /* Trello blue button */
   color: #ffffff;
   border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 8px 18px;
+  border-radius: 6px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  box-shadow: var(--shadow-glow);
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .btn-confirm:hover {
-  background: var(--color-blue-hover);
-  transform: translateY(-1px);
+  background: #0747a6;
 }
 
 .btn-danger {
-  background: #ef4444;
+  background: #de350b;                   /* Red danger button */
   color: #ffffff;
   border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 8px 18px;
+  border-radius: 6px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .btn-danger:hover {
-  background: #dc2626;
-  transform: translateY(-1px);
+  background: #bf2600;
 }
 
-/* COMMENTS SECTION */
+/* Comments Thread Inside Modal */
 .comments-section {
-  margin-top: 18px;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .comment-item {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 10px 14px;
+  background: #f4f5f7;
+  border: 1px solid #dfe1e6;
+  border-radius: 6px;
+  padding: 9px 12px;
 }
 
 .comment-author {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 800;
-  color: var(--color-blue);
-  margin-bottom: 4px;
+  color: #0052cc;
+  margin-bottom: 2px;
 }
 
 .comment-text {
-  font-size: 0.88rem;
-  color: var(--color-navy-light);
+  font-size: 0.84rem;
+  color: var(--trello-text-dark);
   line-height: 1.4;
 }
 
-/* =========================================
+/* ==========================================================================
    AUTHENTICATION SCREENS (LOGIN & REGISTER)
-========================================== */
+   ========================================================================== */
 .auth-page-container {
   min-height: 100vh;
   width: 100vw;
-  display: flex;
-  background: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.08), transparent 50%),
-              radial-gradient(circle at 90% 80%, rgba(147, 51, 234, 0.08), transparent 50%),
-              #f8fafc;
+  display: flex;                         /* Hero on Left, Form on Right */
+  background-image: url('/trello-bg.svg'); /* Sunset Wallpaper */
+  background-size: cover;
+  background-position: center;
   overflow-y: auto;
 }
 
+/* Left Showcase Marketing Hero Section */
 .auth-hero-section {
-  width: 50%;
-  padding: 60px 80px;
+  width: 50%;                            /* Half of screen on desktop */
+  padding: 60px 70px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: linear-gradient(135deg, #0b1120 0%, #1e1b4b 50%, #0f172a 100%);
+  background: rgba(9, 13, 22, 0.88);     /* Translucent dark midnight overlay */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   color: #ffffff;
   position: relative;
   overflow: hidden;
-  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
-}
-
-.auth-hero-section::before {
-  content: '';
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.3), transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.25);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .auth-hero-brand {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .auth-hero-logo {
-  height: 52px;
+  height: 48px;
+  width: 48px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
 }
 
 .auth-hero-title {
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   font-weight: 800;
   color: #ffffff;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.4px;
 }
 
 .auth-hero-tagline {
-  font-size: 0.72rem;
-  color: var(--color-gold);
+  font-size: 0.65rem;
+  color: #fbbf24;                        /* Amber gold motto */
   font-weight: 800;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.2px;
+  margin-top: 2px;
 }
 
 .auth-hero-heading {
-  font-size: 2.2rem;
+  font-size: 2.1rem;
   font-weight: 800;
   line-height: 1.25;
-  margin-bottom: 16px;
-  letter-spacing: -0.5px;
-  background: linear-gradient(135deg, #ffffff, #93c5fd);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  margin-bottom: 14px;
+  letter-spacing: -0.02em;
+  color: #ffffff;
 }
 
 .auth-hero-subheading {
-  font-size: 1rem;
-  color: #94a3b8;
+  font-size: 0.95rem;
+  color: #cbd5e1;
   line-height: 1.6;
-  margin-bottom: 40px;
+  margin-bottom: 34px;
 }
 
 .auth-feature-list {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
 }
 
 .auth-feature-card {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 16px 20px;
-  border-radius: 14px;
-  transition: transform 0.2s ease, background 0.2s ease;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 13px 18px;
+  border-radius: 9px;
+  transition: all 0.2s ease;
 }
 
 .auth-feature-card:hover {
-  transform: translateX(6px);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);            /* Slide slightly right on hover */
 }
 
 .feature-icon-badge {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   flex-shrink: 0;
 }
 
 .blue-badge {
-  background: rgba(37, 99, 235, 0.2);
-  color: #60a5fa;
+  background: rgba(37, 99, 235, 0.3);
+  color: #93c5fd;
 }
 
 .purple-badge {
-  background: rgba(147, 51, 234, 0.2);
-  color: #c084fc;
+  background: rgba(168, 85, 247, 0.3);
+  color: #d8b4fe;
 }
 
 .gold-badge {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.3);
+  color: #fde68a;
 }
 
 .feature-title {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #ffffff;
   margin-bottom: 2px;
 }
 
 .feature-desc {
-  font-size: 0.84rem;
-  color: #94a3b8;
+  font-size: 0.8rem;
+  color: #cbd5e1;
 }
 
+/* Right-Hand Side Form Area */
 .auth-form-wrapper {
   width: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 60px 40px;
+  padding: 50px 30px;
 }
 
 .auth-box {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.94); /* Frosted white card */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   width: 100%;
-  max-width: 440px;
-  padding: 44px;
-  border-radius: 20px;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+  max-width: 420px;
+  padding: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
 }
 
 .auth-box-header {
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .auth-box h2 {
-  color: var(--color-navy-light);
-  font-size: 1.65rem;
+  color: var(--trello-text-dark);
+  font-size: 1.55rem;
   font-weight: 800;
   margin-bottom: 6px;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.02em;
 }
 
 .auth-box p {
-  color: var(--color-text-muted);
-  font-size: 0.92rem;
-  margin-bottom: 26px;
+  color: var(--trello-text-subtle);
+  font-size: 0.86rem;
+  margin-bottom: 20px;
 }
 
 .btn-back-link {
   background: none;
   border: none;
-  color: var(--color-text-muted);
-  font-size: 0.88rem;
+  color: var(--trello-text-subtle);
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   padding: 0;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
   display: inline-block;
-  transition: color 0.2s ease;
+  transition: color 0.15s ease;
 }
 
 .btn-back-link:hover {
-  color: var(--color-blue);
-  text-decoration: underline;
+  color: #0052cc;
 }
 
 .error-message {
-  background: #fef2f2;
-  color: #ef4444;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 18px;
-  font-size: 0.88rem;
-  border: 1px solid #fca5a5;
+  background: #ffebe6;
+  color: #de350b;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 0.84rem;
+  border: 1px solid #ffbdad;
   font-weight: 600;
 }
 
 .stack-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 15px;
 }
 
 .input-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .input-group label {
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--trello-text-dark);
 }
 
 .input-group input,
 .input-group textarea {
-  padding: 12px 16px;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 10px;
-  background: #f8fafc;
-  color: var(--color-navy-light);
-  font-size: 0.94rem;
+  padding: 10px 14px;
+  border: 1.5px solid #dfe1e6;
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--trello-text-dark);
+  font-size: 0.9rem;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .input-group input:focus,
 .input-group textarea:focus {
-  border-color: var(--color-blue);
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  border-color: #0052cc;                 /* Highlight input on focus */
+  box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.2);
 }
 
 .btn-primary {
   width: 100%;
-  padding: 13px;
-  background: var(--color-blue);
+  padding: 11px;
+  background: #0052cc;                   /* Solid blue submit button */
   color: #ffffff;
   border: none;
-  border-radius: 10px;
-  font-size: 0.98rem;
-  font-weight: 800;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  font-weight: 700;
   cursor: pointer;
-  margin-top: 10px;
-  box-shadow: var(--shadow-glow);
-  transition: all 0.2s ease;
+  margin-top: 8px;
+  transition: all 0.15s ease;
 }
 
 .btn-primary:hover {
-  background: var(--color-blue-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px 0 rgba(37, 99, 235, 0.4);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
+  background: #0747a6;
+  transform: translateY(-1px);
 }
 
 .auth-footer {
   text-align: center;
-  margin-top: 24px;
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
+  margin-top: 20px;
+  font-size: 0.84rem;
+  color: var(--trello-text-subtle);
 }
 
 .auth-footer span {
-  color: var(--color-blue);
-  font-weight: 800;
+  color: #0052cc;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .auth-footer span:hover {
   text-decoration: underline;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (TABLETS & MOBILE SCREENS)
+   ========================================================================== */
+@media (max-width: 900px) {
+  .auth-page-container {
+    flex-direction: column;              /* Stack hero panel above form on mobile */
+  }
+  .auth-hero-section {
+    width: 100%;
+    padding: 36px 20px;
+  }
+  .auth-form-wrapper {
+    width: 100%;
+    padding: 36px 20px;
+  }
 }

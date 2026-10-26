@@ -1,25 +1,54 @@
+/**
+ * ==========================================================================
+ * BOARDLY — MODAL DIALOGS COMPONENT
+ * File: /src/components/Modals.js
+ * Purpose: Renders dynamic popup overlays and interactive modal dialogs for:
+ *          1. Adding a new list (column)
+ *          2. Renaming an existing list
+ *          3. Confirming list deletion
+ *          4. Adding a new task card
+ *          5. Viewing/editing card details (title, description, and comments)
+ * ==========================================================================
+ */
+
+// Import central store to read activeModal state and dispatch modification actions
 import { store } from '../state.js';
 
+/**
+ * renderModals(state)
+ * Inspects state.activeModal and returns the appropriate modal dialog markup.
+ * Parameters:
+ *   - state: Current application state object
+ * Returns:
+ *   - HTML string template (or empty string if no modal is active)
+ */
 export function renderModals(state) {
+  // Destructure active modal descriptor and active board data
   const { activeModal, activeFileId, boards } = state;
+  // If activeModal is null, render nothing into #modal-root
   if (!activeModal) return '';
 
+  // Get active board data object
   const board = activeFileId ? boards[activeFileId] : null;
 
+  // MODAL TYPE 1: "Add New List" (Creates a new column on the board)
   if (activeModal.type === 'addList') {
     return `
       <div class="modal-overlay" id="modal-overlay">
         <div class="modal-card">
+          <!-- Modal Top Header with Title and Close '×' Button -->
           <div class="modal-header">
             <h3 class="modal-title">Add New List</h3>
             <button class="btn-close" id="btn-modal-close">×</button>
           </div>
+          <!-- Modal Body with Title Input Field -->
           <div class="modal-body">
             <div class="input-group">
               <label>List Title</label>
               <input type="text" id="modal-input-title" autoFocus placeholder="e.g. In Review" />
             </div>
           </div>
+          <!-- Modal Action Buttons -->
           <div class="modal-footer">
             <button class="btn-cancel" id="btn-modal-cancel">Cancel</button>
             <button class="btn-confirm" id="btn-modal-save">Add List</button>
@@ -29,6 +58,7 @@ export function renderModals(state) {
     `;
   }
 
+  // MODAL TYPE 2: "Rename List" (Edits existing column name)
   if (activeModal.type === 'editList') {
     return `
       <div class="modal-overlay" id="modal-overlay">
@@ -40,6 +70,7 @@ export function renderModals(state) {
           <div class="modal-body">
             <div class="input-group">
               <label>List Title</label>
+              <!-- Pre-populate input with current list title -->
               <input type="text" id="modal-input-title" autoFocus value="${activeModal.title || ''}" />
             </div>
           </div>
@@ -52,6 +83,7 @@ export function renderModals(state) {
     `;
   }
 
+  // MODAL TYPE 3: "Delete List Confirmation"
   if (activeModal.type === 'deleteList') {
     return `
       <div class="modal-overlay" id="modal-overlay">
@@ -72,6 +104,7 @@ export function renderModals(state) {
     `;
   }
 
+  // MODAL TYPE 4: "Add New Card" (Creates card inside target column)
   if (activeModal.type === 'addCard') {
     return `
       <div class="modal-overlay" id="modal-overlay">
@@ -95,31 +128,38 @@ export function renderModals(state) {
     `;
   }
 
+  // MODAL TYPE 5: "Card Detail & Comments Dialog"
   if (activeModal.type === 'cardDetail' && board) {
     const task = board.tasks[activeModal.taskId];
-    if (!task) return '';
+    if (!task) return ''; // Guard against missing task record
 
+    // Extract comments array
     const comments = Array.isArray(task.comments) ? task.comments : [];
 
     return `
       <div class="modal-overlay" id="modal-overlay">
         <div class="modal-card" style="max-width: 560px;">
+          <!-- Header with Title and Close Button -->
           <div class="modal-header">
             <h3 class="modal-title">Edit Card</h3>
             <button class="btn-close" id="btn-modal-close">×</button>
           </div>
 
+          <!-- Body with Card Title, Description, and Comment Thread -->
           <div class="modal-body">
+            <!-- Edit Card Headline / Title -->
             <div class="input-group">
               <label>Card Title</label>
               <input type="text" id="modal-input-card-title" value="${task.content || ''}" placeholder="Enter card title..." />
             </div>
 
+            <!-- Edit Card Detailed Description -->
             <div class="input-group">
               <label>Description</label>
               <textarea id="modal-input-desc" rows="3" placeholder="Add a detailed description...">${task.description || ''}</textarea>
             </div>
 
+            <!-- Comments Discussion Section -->
             <div class="comments-section">
               <label style="font-size:0.82rem; font-weight:700; color:#334155;">Comments (${comments.length})</label>
               ${comments.length > 0 ? `
@@ -133,12 +173,14 @@ export function renderModals(state) {
                 </div>
               ` : `<div style="font-size:0.85rem; color:#94a3b8;">No comments yet. Be the first to comment!</div>`}
 
+              <!-- Input to write and post a new comment -->
               <div class="input-group" style="margin-top: 8px;">
                 <input type="text" id="modal-input-new-comment" placeholder="Write a comment..." />
               </div>
             </div>
           </div>
 
+          <!-- Footer with Delete Card and Save Changes buttons -->
           <div class="modal-footer" style="justify-content: space-between;">
             <button class="btn-danger" id="btn-modal-delete-task">Delete Card</button>
             <div style="display: flex; gap: 10px;">
@@ -154,24 +196,34 @@ export function renderModals(state) {
   return '';
 }
 
+/**
+ * attachModalEvents(container)
+ * Binds click events for closing modals, saving additions, renaming lists,
+ * deleting items, and posting comments.
+ * Parameters:
+ *   - container: The DOM element containing the modal markup (#modal-root)
+ */
 export function attachModalEvents(container) {
   const overlay = container.querySelector('#modal-overlay');
-  if (!overlay) return;
+  if (!overlay) return; // Guard clause if no modal is currently rendered
 
+  // Helper function to dismiss the active modal
   const closeModal = () => store.setState({ activeModal: null });
 
-  // Close on backdrop click or close/cancel button
+  // 1. Close modal if user clicks on the darkened backdrop outside the card
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) closeModal();
   });
 
+  // 2. Close modal on top-right '×' button click
   const closeBtn = overlay.querySelector('#btn-modal-close');
   if (closeBtn) closeBtn.addEventListener('click', closeModal);
 
+  // 3. Close modal on bottom 'Cancel' / 'Close' button click
   const cancelBtn = overlay.querySelector('#btn-modal-cancel');
   if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
 
-  // Add/Edit List Save
+  // 4. Save handler for Add List or Rename List
   const saveListBtn = overlay.querySelector('#btn-modal-save');
   if (saveListBtn) {
     saveListBtn.addEventListener('click', () => {
@@ -181,27 +233,27 @@ export function attachModalEvents(container) {
       if (!activeModal) return;
 
       if (activeModal.type === 'addList') {
-        store.addList(text);
+        store.addList(text); // Create new column
       } else if (activeModal.type === 'editList') {
-        store.renameList(activeModal.colId, text);
+        store.renameList(activeModal.colId, text); // Rename existing column
       }
       closeModal();
     });
   }
 
-  // Delete List Confirm
+  // 5. Confirm handler for Deleting a List
   const deleteListConfirmBtn = overlay.querySelector('#btn-modal-delete-confirm');
   if (deleteListConfirmBtn) {
     deleteListConfirmBtn.addEventListener('click', () => {
       const { activeModal } = store.getState();
       if (activeModal && activeModal.colId) {
-        store.deleteList(activeModal.colId);
+        store.deleteList(activeModal.colId); // Remove column and all its tasks
       }
       closeModal();
     });
   }
 
-  // Add Card Save
+  // 6. Save handler for Adding a new Card
   const saveCardBtn = overlay.querySelector('#btn-modal-save-card');
   if (saveCardBtn) {
     saveCardBtn.addEventListener('click', () => {
@@ -209,25 +261,25 @@ export function attachModalEvents(container) {
       const text = textarea ? textarea.value : '';
       const { activeModal } = store.getState();
       if (activeModal && activeModal.colId) {
-        store.addCard(activeModal.colId, text);
+        store.addCard(activeModal.colId, text); // Add card to target column
       }
       closeModal();
     });
   }
 
-  // Delete Card from inside detail modal
+  // 7. Delete task handler from inside the Card Detail modal
   const deleteTaskBtn = overlay.querySelector('#btn-modal-delete-task');
   if (deleteTaskBtn) {
     deleteTaskBtn.addEventListener('click', () => {
       const { activeModal } = store.getState();
       if (activeModal && activeModal.taskId) {
-        store.deleteTask(activeModal.taskId);
+        store.deleteTask(activeModal.taskId); // Remove task
       }
       closeModal();
     });
   }
 
-  // Card Detail Save (title, description & new comment)
+  // 8. Save handler for Card Details (Title, Description, and new Comment)
   const saveDetailBtn = overlay.querySelector('#btn-modal-save-detail');
   if (saveDetailBtn) {
     saveDetailBtn.addEventListener('click', () => {
